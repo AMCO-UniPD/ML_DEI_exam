@@ -32,4 +32,8 @@ else
     rm ML_exam_slides.tar.xz
 fi
 
+# download cheat sheet
+echo "Downloading cheat sheet..."
+curl -o cheat_sheet.pdf https://cloud.dei.unipd.it/public.php/dav/files/RPT9S9jwkkNjicQ/
+
 jupyter lab
