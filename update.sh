@@ -1,14 +1,19 @@
 #!/bin/bash
 
 tar_files=(*.tar.gz)
-echo "Select a file to extract:"
-select tar_file in "${tar_files[@]}"; do
-    if [ -n "$tar_file" ]; then
-        break
-    else
-        echo "Invalid selection. Please try again."
-    fi
-done
+if [ ${#tar_files[@]} -eq 1 ]; then
+    tar_file="${tar_files[0]}"
+    echo "Found: $tar_file"
+else
+    echo "Select a file to extract:"
+    select tar_file in "${tar_files[@]}"; do
+        if [ -n "$tar_file" ]; then
+            break
+        else
+            echo "Invalid selection. Please try again."
+        fi
+    done
+fi
 
 openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -d -in "$tar_file" -pass pass:"$EXAM" | tar -xz -C .
 
