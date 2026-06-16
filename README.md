@@ -5,8 +5,12 @@ Repository for the exams of the Machine Learning course.
 EXAM=password singularity run /nfsd/opt/sif-images/ML_notebook_v9.sif
 ```
 
-## Consegna esame
+## Consegna
 
-Aprire il seguente link dropbox e caricare il file nominato NOME_COGNOME_MATRICOLA.ipynb
+1. Salva il notebook dal menu: 
+    - "File" → "Save Notebook As..."
+    - Nominalo: "Nome_Cognome_Matricola.ipynb"
+    - Premi "Save"
 
-https://www.dropbox.com/request/7w3ad3vjc3s1v79q4h1i
+Vedi:
+
