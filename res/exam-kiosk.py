@@ -377,7 +377,7 @@ class KioskWindow(Gtk.Window):
 
         wv2 = _make_webview(context)
         wv2.load_uri(EXAM_URL)
-        nb.append_page(wv2, Gtk.Label(label="  Piattaforma Esame  "))
+        nb.append_page(wv2, Gtk.Label(label="  Exam Upload  "))
 
         self.show_all()
 

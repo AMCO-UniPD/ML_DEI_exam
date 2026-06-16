@@ -15,3 +15,5 @@ EXAM=password singularity run /nfsd/opt/sif-images/ML_notebook_v9.sif
 Vedi:
 
 ![consegna](res/istruzioniDownload.png)
+
+2. Carica il notebook sulla pagina
