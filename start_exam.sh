@@ -43,13 +43,20 @@ curl -fsSL -o cheat_sheet.pdf \
     https://cloud.dei.unipd.it/public.php/dav/files/RPT9S9jwkkNjicQ/ \
     || echo "Avviso: download cheat sheet fallito."
 
-# ── Genera pagina istruzioni e avvia server locale ────────────
-python3 - << 'PYEOF'
-import pathlib, re
+# ── Genera pagina istruzioni (self-contained con immagini base64) ─
+README_HTML=$(python3 - << 'PYEOF'
+import pathlib, re, base64, tempfile
 
 md = pathlib.Path('README.md').read_text()
 lines_out = []
 in_code = False
+
+def embed_image(m):
+    try:
+        data = base64.b64encode(pathlib.Path(m.group(2)).read_bytes()).decode()
+        return f'<img src="data:image/png;base64,{data}" alt="{m.group(1)}" style="max-width:100%">'
+    except Exception:
+        return ''
 
 for line in md.split('\n'):
     if line.startswith('```'):
@@ -59,25 +66,25 @@ for line in md.split('\n'):
     if in_code:
         lines_out.append(line.replace('&', '&amp;').replace('<', '&lt;'))
         continue
-    line = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)',
-                  lambda m: f'<img src="{m.group(2)}" alt="{m.group(1)}" style="max-width:100%">',
-                  line)
-    if line.startswith('# '):      lines_out.append(f'<h1>{line[2:]}</h1>')
-    elif line.startswith('## '):   lines_out.append(f'<h2>{line[3:]}</h2>')
-    elif line.startswith('### '):  lines_out.append(f'<h3>{line[4:]}</h3>')
-    elif line.strip() == '':       lines_out.append('<br>')
-    else:                          lines_out.append(f'<p>{line}</p>')
+    line = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', embed_image, line)
+    if line.startswith('# '):     lines_out.append(f'<h1>{line[2:]}</h1>')
+    elif line.startswith('## '):  lines_out.append(f'<h2>{line[3:]}</h2>')
+    elif line.startswith('### '): lines_out.append(f'<h3>{line[4:]}</h3>')
+    elif line.strip() == '':      lines_out.append('<br>')
+    else:                         lines_out.append(f'<p>{line}</p>')
 
-page = """<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>body{font-family:sans-serif;max-width:760px;margin:32px auto;padding:0 20px;line-height:1.6}
-img{max-width:100%}pre{background:#f4f4f4;padding:12px;border-radius:4px;overflow-x:auto}</style>
-</head><body>""" + '\n'.join(lines_out) + "</body></html>"
+page = ('<!DOCTYPE html><html><head><meta charset="utf-8">'
+        '<style>body{font-family:sans-serif;max-width:760px;margin:32px auto;'
+        'padding:0 20px;line-height:1.6}img{max-width:100%}'
+        'pre{background:#f4f4f4;padding:12px;border-radius:4px;overflow-x:auto}'
+        '</style></head><body>' + '\n'.join(lines_out) + '</body></html>')
 
-pathlib.Path('_instructions.html').write_text(page)
+f = tempfile.NamedTemporaryFile(suffix='.html', delete=False, mode='w')
+f.write(page)
+f.close()
+print(f.name)
 PYEOF
-
-python3 -m http.server 8890 --directory . > /dev/null 2>&1 &
-HTTP_PID=$!
+)
 
 # ── Avvia Jupyter nel container ───────────────────────────────
 echo "Avvio Jupyter..."
@@ -113,7 +120,7 @@ if [ "$NO_GUI" -eq 1 ]; then
     echo "  $JUPYTER_URL"
     wait "$JUPYTER_PID"
 else
-    python3 res/exam-kiosk.py "$JUPYTER_URL"
+    python3 res/exam-kiosk.py "$JUPYTER_URL" "file://$README_HTML"
     KIOSK_EXIT=$?
 
     if [ "$KIOSK_EXIT" -eq 42 ]; then
@@ -124,6 +131,6 @@ else
 fi
 
 # ── Pulizia ───────────────────────────────────────────────────
-kill "$JUPYTER_PID" "$HTTP_PID" 2>/dev/null
-wait "$JUPYTER_PID" "$HTTP_PID" 2>/dev/null
-rm -f "$JUPYTER_LOG" _instructions.html
+kill "$JUPYTER_PID" 2>/dev/null
+wait "$JUPYTER_PID" 2>/dev/null
+rm -f "$JUPYTER_LOG" "$README_HTML"

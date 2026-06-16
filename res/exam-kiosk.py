@@ -29,8 +29,8 @@ JUPYTER_URL = (
     if len(sys.argv) > 1
     else "http://127.0.0.1:8888/lab"
 )
-EXAM_URL    = "https://esami.unipd.it/"
-README_URL  = "http://127.0.0.1:8890/_instructions.html"
+EXAM_URL   = "https://esami.unipd.it/"
+README_URL = sys.argv[2] if len(sys.argv) > 2 else ""
 # ═══════════════════════════════════════════════════════════════
 
 
@@ -342,9 +342,10 @@ class KioskWindow(Gtk.Window):
         wv2.load_uri(EXAM_URL)
         nb.append_page(wv2, Gtk.Label(label="  Exam Upload  "))
 
-        wv3 = _make_webview(context)
-        wv3.load_uri(README_URL)
-        nb.append_page(wv3, Gtk.Label(label="  Istruzioni  "))
+        if README_URL:
+            wv3 = _make_webview(context)
+            wv3.load_uri(README_URL)
+            nb.append_page(wv3, Gtk.Label(label="  Istruzioni  "))
 
         self.show_all()
 
