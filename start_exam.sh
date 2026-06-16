@@ -9,6 +9,18 @@ for arg in "$@"; do
     [ "$arg" = "--no-gui" ] && NO_GUI=1
 done
 
+# ── Controlla dipendenze ──────────────────────────────────────
+if ! command -v singularity &>/dev/null; then
+    echo "Errore: 'singularity' non trovato. Installa Singularity/Apptainer e riprova."
+    exit 1
+fi
+
+if [ ! -f "$SIF" ]; then
+    echo "Errore: immagine Singularity non trovata: $SIF"
+    echo "Contatta il docente."
+    exit 1
+fi
+
 # ── Codice esame ──────────────────────────────────────────────
 read -rp "Codice esame: " EXAM < /dev/tty
 

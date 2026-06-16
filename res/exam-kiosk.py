@@ -17,7 +17,7 @@ try:
     gi.require_version("Gtk", "3.0")
     gi.require_version("WebKit2", "4.0")
     from gi.repository import Gtk, WebKit2, Gdk, GLib
-except ImportError:
+except (ImportError, ValueError):
     sys.exit(42)
 
 # ═══════════════════════════════════════════════════════════════
