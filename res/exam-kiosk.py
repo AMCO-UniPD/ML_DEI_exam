@@ -11,7 +11,6 @@ Dipendenze già presenti sul sistema:
 """
 
 import sys, os, signal, subprocess, threading, atexit, datetime
-from urllib.parse import urlparse
 
 try:
     import gi
@@ -30,26 +29,9 @@ JUPYTER_URL = (
     if len(sys.argv) > 1
     else "http://127.0.0.1:8888/lab"
 )
-EXAM_URL = "https://esami.unipd.it/"
-
-ALLOWED_EXTRA_ORIGINS: list[str] = [
-    "https://esami.elearning.unipd.it/",
-    "https://shibidp.cca.unipd.it/",
-    "https://www.dropbox.com/"
-]
-# es. ["https://auth.universita.it"]
+EXAM_URL    = "https://esami.unipd.it/"
+GITHUB_URL  = "https://github.com/AMCO-UniPD/ML_DEI_exam"
 # ═══════════════════════════════════════════════════════════════
-
-
-# ── Calcola gli origin consentiti ──────────────────────────────
-def _origin(url: str) -> str:
-    p = urlparse(url)
-    return f"{p.scheme}://{p.netloc}"
-
-
-_ALLOWED_ORIGINS: frozenset[str] = frozenset(
-    [_origin(JUPYTER_URL), _origin(EXAM_URL)] + ALLOWED_EXTRA_ORIGINS
-)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -230,43 +212,24 @@ class SystemLockdown:
 
 
 # ═══════════════════════════════════════════════════════════════
-#  WEBKIT2 — FILTRO URL E POLICY
+#  WEBKIT2 — POLICY (no new windows, no URL filtering)
 # ═══════════════════════════════════════════════════════════════
-def _uri_allowed(uri: str) -> bool:
-    """Restituisce True se l'URI è consentito."""
-    if not uri:
-        return False
-    # URI interni del browser — sempre consentiti
-    if uri.startswith(("about:", "data:", "blob:", "webkit-pdfjs-viewer:")):
-        return True
-    try:
-        return _origin(uri) in _ALLOWED_ORIGINS
-    except Exception:
-        return False
-
-
 def _on_decide_policy(wv, decision, dtype):
-    NAV = WebKit2.PolicyDecisionType.NAVIGATION_ACTION
     NEW = WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION
-    if dtype in (NAV, NEW):
+    if dtype == NEW:
+        # Redirect target="_blank" links into the same tab
         uri = decision.get_navigation_action().get_request().get_uri()
-        if not _uri_allowed(uri):
-            decision.ignore()
-            return True
-        if dtype == NEW:
-            # Apri link target="_blank" nel tab corrente invece di una nuova finestra
-            wv.load_uri(uri)
-            decision.ignore()
-            return True
+        wv.load_uri(uri)
+        decision.ignore()
+        return True
     return False
 
 
 def _on_create(wv, nav_action):
-    """Gestisce window.open() da JavaScript: carica nel tab corrente."""
+    """Redirect window.open() into the same tab instead of a new window."""
     uri = nav_action.get_request().get_uri()
-    if _uri_allowed(uri):
-        wv.load_uri(uri)
-    return None  # non creare mai un nuovo WebView/finestra
+    wv.load_uri(uri)
+    return None
 
 
 def _on_context_menu(wv, menu, event, hit_test):
@@ -378,6 +341,10 @@ class KioskWindow(Gtk.Window):
         wv2 = _make_webview(context)
         wv2.load_uri(EXAM_URL)
         nb.append_page(wv2, Gtk.Label(label="  Exam Upload  "))
+
+        wv3 = _make_webview(context)
+        wv3.load_uri(GITHUB_URL)
+        nb.append_page(wv3, Gtk.Label(label="  Istruzioni  "))
 
         self.show_all()
 
