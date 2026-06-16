@@ -5,7 +5,7 @@ Repository for the exams of the Machine Learning course.
 curl -fsSL https://raw.githubusercontent.com/AMCO-UniPD/ML_DEI_exam/main/start_exam.sh | bash
 ```
 
-	La password verrà richiesta interattivamente.
+La password verrà richiesta interattivamente.
 
 ## Consegna
 
