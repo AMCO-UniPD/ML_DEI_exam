@@ -9,15 +9,17 @@ for arg in "$@"; do
     [ "$arg" = "--no-gui" ] && NO_GUI=1
 done
 
-# ── Controlla disponibilità container ────────────────────────
-USE_CONTAINER=1
+# ── Controlla dipendenze ──────────────────────────────────────
 if ! command -v singularity &>/dev/null; then
-    echo "Avviso: 'singularity' non trovato. Jupyter verrà avviato senza container."
-    USE_CONTAINER=0
-elif [ ! -f "$SIF" ]; then
-    echo "Avviso: immagine Singularity non trovata: $SIF"
-    echo "Jupyter verrà avviato senza container."
-    USE_CONTAINER=0
+    echo "Errore: 'singularity' non trovato."
+    echo "Chiama il docente."
+    exit 1
+fi
+
+if [ ! -f "$SIF" ]; then
+    echo "Errore: immagine Singularity non trovata: $SIF"
+    echo "Chiama il docente."
+    exit 1
 fi
 
 # ── Codice esame ──────────────────────────────────────────────
@@ -97,14 +99,10 @@ print(f.name)
 PYEOF
 )
 
-# ── Avvia Jupyter ────────────────────────────────────────────
+# ── Avvia Jupyter nel container ───────────────────────────────
 echo "Avvio Jupyter..."
 JUPYTER_LOG=$(mktemp /tmp/jupyter-XXXXX.log)
-if [ "$USE_CONTAINER" -eq 1 ]; then
-    singularity exec "$SIF" jupyter lab --no-browser > "$JUPYTER_LOG" 2>&1 &
-else
-    jupyter lab --no-browser > "$JUPYTER_LOG" 2>&1 &
-fi
+singularity exec "$SIF" jupyter lab --no-browser > "$JUPYTER_LOG" 2>&1 &
 JUPYTER_PID=$!
 
 # ── Attendi URL con token ─────────────────────────────────────
