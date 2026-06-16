@@ -26,6 +26,17 @@ fi
 read -rp "Codice esame: " EXAM < /dev/tty
 
 # ── Clona il repo ─────────────────────────────────────────────
+if [ -d "$REPO_DIR" ]; then
+    BACKUP="${REPO_DIR}_$(date '+%Y-%m-%d-%H:%M:%S')"
+    mv "$REPO_DIR" "$BACKUP"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  ATTENZIONE: cartella '$REPO_DIR' già esistente."
+    echo "  Rinominata in: $BACKUP"
+    echo "  Verrà scaricata una nuova copia del materiale."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+fi
 echo "Scarico materiale d'esame..."
 git clone "$REPO" "$REPO_DIR"
 cd "$REPO_DIR"
