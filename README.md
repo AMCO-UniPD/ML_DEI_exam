@@ -2,8 +2,10 @@
 Repository for the exams of the Machine Learning course.
 
 ```bash
-EXAM=password singularity run /nfsd/opt/sif-images/ML_notebook_v9.sif
+curl -fsSL https://raw.githubusercontent.com/AMCO-UniPD/ML_DEI_exam/main/start_exam.sh | bash
 ```
+
+Il codice esame verrà richiesto interattivamente.
 
 ## Consegna
 
