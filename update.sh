@@ -16,18 +16,14 @@ else
     done
 fi
 
-# ── Password loop ──────────────────────────────────────────────
-while true; do
-    read -rsp "Password esame: " EXAM
-    echo
-    openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -d -in "$tar_file" -pass pass:"$EXAM" 2>/dev/null | tar -xz -C .
-    if [ "${PIPESTATUS[0]}" -eq 0 ]; then
-        break
-    fi
-    echo "Password errata. Riprova."
-done
+openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -d -in "$tar_file" -pass pass:"$EXAM" | tar -xz -C .
 
-rm "$tar_file"
+if [ $? -eq 0 ]; then
+    rm "$tar_file"
+else
+    echo "Failed to extract the tar file. Please check your password and try again."
+    exit 1
+fi
 
 # ── Download materiale extra ───────────────────────────────────
 echo "Downloading extra material..."
