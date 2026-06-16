@@ -4,6 +4,11 @@ SIF=/nfsd/opt/sif-images/ML_notebook_v9.sif
 REPO=https://github.com/AMCO-UniPD/ML_DEI_exam.git
 REPO_DIR=ML_DEI_exam
 
+NO_GUI=0
+for arg in "$@"; do
+    [ "$arg" = "--no-gui" ] && NO_GUI=1
+done
+
 # ── Codice esame ──────────────────────────────────────────────
 read -rp "Codice esame: " EXAM < /dev/tty
 
@@ -65,8 +70,22 @@ fi
 
 echo "Jupyter pronto: $JUPYTER_URL"
 
-# ── Kiosk (blocca finché lo studente non esce) ────────────────
-python3 res/exam-kiosk.py "$JUPYTER_URL"
+# ── Kiosk o modalità no-gui ───────────────────────────────────
+if [ "$NO_GUI" -eq 1 ]; then
+    echo ""
+    echo "Modalità --no-gui: apri nel browser:"
+    echo "  $JUPYTER_URL"
+    wait "$JUPYTER_PID"
+else
+    python3 res/exam-kiosk.py "$JUPYTER_URL"
+    KIOSK_EXIT=$?
+
+    if [ "$KIOSK_EXIT" -eq 42 ]; then
+        echo ""
+        echo "ERRORE: interfaccia grafica non disponibile (GTK/WebKit mancante)."
+        echo "Chiama il docente."
+    fi
+fi
 
 # ── Pulizia ───────────────────────────────────────────────────
 kill "$JUPYTER_PID" 2>/dev/null
