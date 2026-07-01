@@ -216,16 +216,71 @@ class SystemLockdown:
 
 
 # ═══════════════════════════════════════════════════════════════
-#  WEBKIT2 — POLICY (no new windows, no URL filtering)
+#  WEBKIT2 — POLICY (no new windows, LLM URL blacklist)
 # ═══════════════════════════════════════════════════════════════
+_BLOCKED_DOMAINS = {
+    "chatgpt.com",
+    "chat.openai.com",
+    "gemini.google.com",
+    "bard.google.com",
+    "claude.ai",
+    "copilot.microsoft.com",
+    "bing.com",
+    "perplexity.ai",
+    "poe.com",
+    "you.com",
+    "character.ai",
+    "pi.ai",
+    "huggingface.co",
+    "aistudio.google.com",
+    "grok.com",
+    "x.com",
+    "mistral.ai",
+    "chat.mistral.ai",
+    "cohere.com",
+    "coral.cohere.com",
+}
+
+_BLOCKED_HTML = b"""<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>body{display:flex;align-items:center;justify-content:center;
+height:100vh;margin:0;background:#1a1a1a;font-family:sans-serif;}
+.box{text-align:center;color:#fff;}.box h1{font-size:2em;color:#e74c3c;}
+.box p{font-size:1.1em;color:#ccc;}</style></head><body>
+<div class="box"><h1>&#128683; Accesso bloccato</h1>
+<p>Questo sito non &egrave; consentito durante la sessione d&rsquo;esame.</p>
+</div></body></html>"""
+
+
+def _is_blocked(uri: str) -> bool:
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(uri).hostname or ""
+        host = host.lower().lstrip("www.")
+        return any(host == d or host.endswith("." + d) for d in _BLOCKED_DOMAINS)
+    except Exception:
+        return False
+
+
 def _on_decide_policy(wv, decision, dtype):
+    NAV = WebKit2.PolicyDecisionType.NAVIGATION_ACTION
     NEW = WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION
-    if dtype == NEW:
-        # Redirect target="_blank" links into the same tab
+    if dtype in (NAV, NEW):
         uri = decision.get_navigation_action().get_request().get_uri()
-        wv.load_uri(uri)
-        decision.ignore()
-        return True
+        if _is_blocked(uri):
+            decision.ignore()
+            if dtype == NAV:
+                wv.load_bytes(
+                    GLib.Bytes.new(_BLOCKED_HTML),
+                    "text/html",
+                    "utf-8",
+                    uri,
+                )
+            return True
+        if dtype == NEW:
+            # Redirect target="_blank" links into the same tab
+            wv.load_uri(uri)
+            decision.ignore()
+            return True
     return False
 
 
