@@ -26,6 +26,7 @@ fi
 read -rp "Codice esame: " EXAM < /dev/tty
 
 # ── Clona il repo ─────────────────────────────────────────────
+RESTORE_ITEMS=()
 if [ -d "$REPO_DIR" ]; then
     BACKUP="${REPO_DIR}_$(date '+%Y-%m-%d-%H:%M:%S')"
     mv "$REPO_DIR" "$BACKUP"
@@ -36,10 +37,28 @@ if [ -d "$REPO_DIR" ]; then
     echo "  Verrà scaricata una nuova copia del materiale."
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
+    echo "  Contenuto del backup:"
+    mapfile -t BACKUP_ENTRIES < <(ls -1 "$BACKUP")
+    for i in "${!BACKUP_ENTRIES[@]}"; do
+        printf "    [%d] %s\n" "$((i+1))" "${BACKUP_ENTRIES[$i]}"
+    done
+    echo ""
+    read -rp "  Numeri da ripristinare (es: 1 3), Invio per saltare: " RESTORE_INPUT < /dev/tty
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    for idx in $RESTORE_INPUT; do
+        if [[ "$idx" =~ ^[0-9]+$ ]] && [ "$idx" -ge 1 ] && [ "$idx" -le "${#BACKUP_ENTRIES[@]}" ]; then
+            RESTORE_ITEMS+=("${BACKUP_ENTRIES[$((idx-1))]}")
+        fi
+    done
 fi
 echo "Scarico materiale d'esame..."
 git clone "$REPO" "$REPO_DIR"
 cd "$REPO_DIR"
+for item in "${RESTORE_ITEMS[@]}"; do
+    cp -r "../$BACKUP/$item" "restored_$item"
+    echo "Ripristinato: restored_$item"
+done
 
 # ── Decritta l'archivio ───────────────────────────────────────
 tar_files=(*.tar.gz)
