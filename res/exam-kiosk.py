@@ -239,6 +239,8 @@ _BLOCKED_DOMAINS = {
     "chat.mistral.ai",
     "cohere.com",
     "coral.cohere.com",
+    "stackoverflow.com",
+    "wikipedia.org",
 }
 
 _BLOCKED_HTML = b"""<!DOCTYPE html><html><head><meta charset="utf-8">
