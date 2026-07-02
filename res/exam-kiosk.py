@@ -33,7 +33,7 @@ JUPYTER_URL = (
     if len(sys.argv) > 1
     else "http://127.0.0.1:8888/lab"
 )
-EXAM_URL   = "https://esami.unipd.it/"
+EXAM_URL   = "https://www.dropbox.com/request/axwsdklixp2j3sf5y3hd"
 README_URL = sys.argv[2] if len(sys.argv) > 2 else ""
 # ═══════════════════════════════════════════════════════════════
 
